@@ -123,7 +123,6 @@ def process_data(batch, model):
 @torch.no_grad()
 def main():
     model = create_model()
-    st.success("Model successfully loaded.")
     st.title("CartNet ADP Prediction")
     st.image('fig/pipeline.png')
     
@@ -144,7 +143,8 @@ def main():
             else:
                 raise ValueError("Temperature not found in the CIF file. \
                                     Please provide a temperature in the field _diffrn_ambient_temperature from the CIF file.")
-            
+            st.success("CIF file successfully read.")
+
             data = Data()
             data.x = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int32)
 
@@ -177,7 +177,7 @@ def main():
             del data, edge_index, edge_attr
             gc.collect()
 
-            st.success("Torch graph successfully created.")
+            st.success("Graph successfully created.")
 
             process_data(batch, model)
             st.success("ADPs successfully predicted.")
@@ -201,7 +201,7 @@ def main():
     st.markdown("""
     ⚠️ **Warning**: This online web application is designed for structures with up to 300 atoms in the unit cell. For larger structures, please use the local implementation of CartNet.
     """)
-    
+
     st.markdown("""
     ### How to cite
 
