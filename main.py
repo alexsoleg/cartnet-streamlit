@@ -18,53 +18,16 @@ MEAN_TEMP = torch.tensor(192.1785) #training temp mean
 STD_TEMP = torch.tensor(81.2135) #training temp std
 
 # We cache the loading function to make is very fast on reload.
-# @st.cache(allow_output_mutation=True)
+@st.cache_resource
 def create_model():
-    ckpt_path = download_model_checkpoint()
-    print(ckpt_path)
     model = CartNet(dim_in=256, dim_rbf=64, num_layers=4, radius=5.0, invariant=False, temperature=True, use_envelope=True, cholesky=True)
-    
+    ckpt_path = "cpkt/cartnet_adp.ckpt"
     load = torch.load(ckpt_path, map_location=torch.device('cpu'))["model_state"]
     
     model.load_state_dict(load)
     model.eval()
     return model
 
-def download_model_checkpoint():
-    """
-    Downloads the CartNet model checkpoint from a Zenodo URL and saves it to the 'cpkt/' directory.
-    """
-    zenodo_url = "https://zenodo.org/records/13970823?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImQxM2ExZjg2LWU4ODktNDhhZC04ODAxLTZjN2MxNGZjMWQ5ZSIsImRhdGEiOnt9LCJyYW5kb20iOiJhZWVlYjk2MmQ5ZjU1ODdiMDgzYmJhMDc4YWE1MTk3MyJ9.TLSJvG_khY3eD0bSWTGhZDtMS7YXk6KpXwLTXLDFPBbOF4PhlxlAeL9h2rpb3M20ushHhqOSfwfvutdfjAePhw"
-    checkpoint_dir = "cpkt"
-    checkpoint_filename = "cartnet_adp.ckpt"
-    checkpoint_path = os.path.join(checkpoint_dir, checkpoint_filename)
-    
-
-    # Create the directory if it doesn't exist
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
-        st.info(f"Created directory: {checkpoint_dir}")
-    
-    # Check if the checkpoint already exists
-    if os.path.exists(checkpoint_path):
-        st.info(f"Checkpoint already exists at '{checkpoint_path}'.")
-        return checkpoint_path
-    
-    try:
-        st.info("Starting download of the CartNet checkpoint from Zenodo...")
-        response = requests.get(zenodo_url, stream=True)
-        response.raise_for_status()  # Raise an error for bad status
-        
-        with open(checkpoint_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:  # Filter out keep-alive chunks
-                    f.write(chunk)
-        
-        st.success(f"Checkpoint downloaded successfully and saved to '{checkpoint_path}'.")
-        return checkpoint_path
-    except requests.exceptions.RequestException as e:
-        st.error(f"Failed to download the checkpoint: {e}")
-        return None
 
 def process_data(batch, model):
     atoms = batch.x.numpy().astype(int)  # Atomic numbers
@@ -147,14 +110,15 @@ def main():
     st.success("Model successfully loaded.")
     st.title("CartNet ADP Prediction")
     
-    # uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"])
-    uploaded_file = "ABABEM.cif"
+    uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"], accept_multiple_files=False)
+    # uploaded_file = "ABABEM.cif"
     if uploaded_file is not None:
         try:
+            filename = str(uploaded_file.name)
             # Read the CIF file using ASE
-            atoms = read(uploaded_file)
+            atoms = read(filename)
             st.success("CIF file successfully read using ASE.")
-            cif = ReadCif(uploaded_file)
+            cif = ReadCif(filename)
             cif_data = cif.first_block()
             if "_diffrn_ambient_temperature" in cif_data.keys():
                 temperature = float(cif_data["_diffrn_ambient_temperature"])
@@ -197,6 +161,9 @@ def main():
                 file_name="output.cif",
                 mime="text/plain"
             )
+
+            os.remove("output.cif")
+            os.remove(filename)
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
 
