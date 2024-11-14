@@ -147,6 +147,10 @@ def main():
             
             data = Data()
             data.x = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int32)
+
+            if len(atoms.positions) > 300:
+                raise ValueError("This online implementation is not optimized for large systems. For large systems, please use the local version.")
+            
             data.pos = torch.tensor(atoms.positions, dtype=torch.float32)
             data.temperature_og = torch.tensor([temperature], dtype=torch.float32)
             data.temperature = (data.temperature_og - MEAN_TEMP) / STD_TEMP
