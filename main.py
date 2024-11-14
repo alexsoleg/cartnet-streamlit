@@ -121,8 +121,7 @@ def main():
             atoms = read(filename, format="cif")
             st.info(atoms)
             st.success("CIF file successfully read using ASE.")
-            st.info(filename.upload_url)
-            cif = ReadCif(uploaded_file.upload_url)
+            cif = ReadCif(filename)
             cif_data = cif.first_block()
             if "_diffrn_ambient_temperature" in cif_data.keys():
                 temperature = float(cif_data["_diffrn_ambient_temperature"])
