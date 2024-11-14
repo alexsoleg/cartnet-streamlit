@@ -198,6 +198,23 @@ def main():
             gc.collect()
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
+    st.markdown("""
+    ### How to cite
+
+    If you use CartNet in your research, please cite our paper:
+
+    ```bibtex
+    @article{your_paper_citation,
+    title={Title of the Paper},
+    author={Author1 and Author2 and Author3},
+    journal={Journal Name},
+    year={2023},
+    volume={XX},
+    number={YY},
+    pages={ZZZ}
+    }
+    ```
+    """)
 
 if __name__ == "__main__":
     main()
