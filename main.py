@@ -25,26 +25,25 @@ def create_model():
     model.eval()
     return model
 
-
+@torch.no_grad()
 def process_data(batch, model):
-    with torch.no_grad():
-        atoms = batch.x.numpy().astype(int)  # Atomic numbers
-        positions = batch.pos.numpy()  # Atomic positions
-        cell = batch.cell.squeeze(0).numpy()  # Cell parameters
-        temperature = batch.temperature_og.numpy()[0]
+    atoms = batch.x.numpy().astype(int)  # Atomic numbers
+    positions = batch.pos.numpy()  # Atomic positions
+    cell = batch.cell.squeeze(0).numpy()  # Cell parameters
+    temperature = batch.temperature_og.numpy()[0]
 
-    
-        adps = model(batch)
-        M = batch.cell.squeeze(0)
-        N = torch.diag(torch.linalg.norm(torch.linalg.inv(M.transpose(-1,-2)).squeeze(0), dim=-1))
 
-        M = torch.linalg.inv(M)
-        N = torch.linalg.inv(N)
+    adps = model(batch)
+    M = batch.cell.squeeze(0)
+    N = torch.diag(torch.linalg.norm(torch.linalg.inv(M.transpose(-1,-2)).squeeze(0), dim=-1))
 
-        adps = M.transpose(-1,-2)@adps@M
-        adps = N.transpose(-1,-2)@adps@N
-        del M, N
-        gc.collect()
+    M = torch.linalg.inv(M)
+    N = torch.linalg.inv(N)
+
+    adps = M.transpose(-1,-2)@adps@M
+    adps = N.transpose(-1,-2)@adps@N
+    del M, N
+    gc.collect()
     
     
     non_H_mask = batch.non_H_mask.numpy()
@@ -120,6 +119,8 @@ def process_data(batch, model):
             label = f"{element}{element_count[element]}"
             cif_file.write(f"{label} {adps[indices[i],0,0]} {adps[indices[i],1,1]} {adps[indices[i],2,2]} {adps[indices[i],1,2]} {adps[indices[i],0,2]} {adps[indices[i],0,1]}\n")
 
+
+@torch.no_grad()
 def main():
     model = create_model()
     st.success("Model successfully loaded.")
@@ -144,34 +145,33 @@ def main():
                 raise ValueError("Temperature not found in the CIF file. \
                                     Please provide a temperature in the field _diffrn_ambient_temperature from the CIF file.")
             
-            with torch.no_grad():
-                data = Data()
-                data.x = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int32)
-                data.pos = torch.tensor(atoms.positions, dtype=torch.float32)
-                data.temperature_og = torch.tensor([temperature], dtype=torch.float32)
-                data.temperature = (data.temperature_og - MEAN_TEMP) / STD_TEMP
-                data.cell = torch.tensor(atoms.cell.array, dtype=torch.float32).unsqueeze(0)
+            data = Data()
+            data.x = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int32)
+            data.pos = torch.tensor(atoms.positions, dtype=torch.float32)
+            data.temperature_og = torch.tensor([temperature], dtype=torch.float32)
+            data.temperature = (data.temperature_og - MEAN_TEMP) / STD_TEMP
+            data.cell = torch.tensor(atoms.cell.array, dtype=torch.float32).unsqueeze(0)
 
-                data.pbc = torch.tensor([True, True, True])
-                data.natoms = len(atoms)
+            data.pbc = torch.tensor([True, True, True])
+            data.natoms = len(atoms)
 
-                del atoms
-                gc.collect()
-                batch = Batch.from_data_list([data])
-                
+            del atoms
+            gc.collect()
+            batch = Batch.from_data_list([data])
+            
 
-                edge_index, _, _, edge_attr = radius_graph_pbc(batch, 5.0, 64)
-                del batch
-                gc.collect()
-                data.cart_dist = torch.norm(edge_attr, dim=-1)
-                data.cart_dir = torch.nn.functional.normalize(edge_attr, dim=-1)
-                data.edge_index = edge_index
-                data.non_H_mask = data.x != 1
-                delattr(data, "pbc")
-                delattr(data, "natoms")
-                batch = Batch.from_data_list([data])
-                del data, edge_index, edge_attr
-                gc.collect()
+            edge_index, _, _, edge_attr = radius_graph_pbc(batch, 5.0, 64)
+            del batch
+            gc.collect()
+            data.cart_dist = torch.norm(edge_attr, dim=-1)
+            data.cart_dir = torch.nn.functional.normalize(edge_attr, dim=-1)
+            data.edge_index = edge_index
+            data.non_H_mask = data.x != 1
+            delattr(data, "pbc")
+            delattr(data, "natoms")
+            batch = Batch.from_data_list([data])
+            del data, edge_index, edge_attr
+            gc.collect()
 
             st.success("Torch graph successfully created.")
 
