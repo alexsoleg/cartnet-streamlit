@@ -33,7 +33,8 @@ def process_data(batch, model):
     with torch.no_grad():
         adps = model(batch)
     
-
+    non_H_mask = batch.non_H_mask.numpy()
+    indices = torch.arange(len(atoms))[non_H_mask].numpy()
     # Create ASE Atoms object
     ase_atoms = Atoms(numbers=atoms, positions=positions, cell=cell, pbc=True)
 
@@ -69,14 +70,14 @@ def process_data(batch, model):
         cif_file.write("_atom_site_thermal_displace_type\n")
         
         element_count = {}
-        for i, (atom_number, frac_pos, adp) in enumerate(zip(atoms, fractional_positions, adps)):
+        for i, (atom_number, frac_pos) in enumerate(zip(atoms, fractional_positions)):
             element = ase_atoms[i].symbol
             assert atom_number == ase_atoms[i].number
             if element not in element_count:
                 element_count[element] = 0
             element_count[element] += 1
             label = f"{element}{element_count[element]}"
-            u_iso = torch.trace(adp).mean() if element != 'H' else 0
+            u_iso = torch.trace(adps[indices[i]]).mean() if element != 'H' else 0.01
             type = "Uani" if element != 'H' else "Uiso"
             cif_file.write(f"{label} {element} {frac_pos[0]} {frac_pos[1]} {frac_pos[2]} {u_iso} {type}\n")
 
@@ -99,7 +100,7 @@ def process_data(batch, model):
                 element_count[element] = 0
             element_count[element] += 1
             label = f"{element}{element_count[element]}"
-            cif_file.write(f"{label} {adp[0,0]} {adp[1,1]} {adp[2,2]} {adp[1,2]} {adp[0,2]} {adp[0,1]}\n")
+            cif_file.write(f"{label} {adps[indices[i],0,0]} {adps[indices[i],1,1]} {adps[indices[i],2,2]} {adps[indices[i],1,2]} {adps[indices[i],0,2]} {adps[indices[i],0,1]}\n")
 
 def main():
     model = create_model()
