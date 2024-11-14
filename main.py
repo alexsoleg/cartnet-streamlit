@@ -35,6 +35,7 @@ def process_data(batch, model):
     
     non_H_mask = batch.non_H_mask.numpy()
     indices = torch.arange(len(atoms))[non_H_mask].numpy()
+    indices = {indices[i]: i for i in range(len(indices))}
     # Create ASE Atoms object
     ase_atoms = Atoms(numbers=atoms, positions=positions, cell=cell, pbc=True)
 
