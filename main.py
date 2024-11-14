@@ -107,7 +107,7 @@ def main():
     model = create_model()
     st.success("Model successfully loaded.")
     st.title("CartNet ADP Prediction")
-    st.image('pipeline.png')
+    st.image('fig/pipeline.png')
     
     uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"], accept_multiple_files=False)
     # uploaded_file = "ABABEM.cif"
