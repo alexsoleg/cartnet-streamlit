@@ -114,9 +114,9 @@ def main():
         try:
             filename = str(uploaded_file.name)
             # Read the CIF file using ASE
-            atoms = read(filename)
+            atoms = read(uploaded_file)
             st.success("CIF file successfully read using ASE.")
-            cif = ReadCif(filename)
+            cif = ReadCif(uploaded_file)
             cif_data = cif.first_block()
             if "_diffrn_ambient_temperature" in cif_data.keys():
                 temperature = float(cif_data["_diffrn_ambient_temperature"])
@@ -161,7 +161,7 @@ def main():
             )
 
             os.remove("output.cif")
-            os.remove(filename)
+            os.remove(uploaded_file)
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
 
