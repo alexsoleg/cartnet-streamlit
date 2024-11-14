@@ -33,6 +33,15 @@ def process_data(batch, model):
 
     with torch.no_grad():
         adps = model(batch)
+    M = batch.cell.squeeze(0)
+    N = torch.diag(torch.linalg.norm(torch.linalg.inv(M.transpose(-1,-2)).squeeze(0), dim=-1))
+
+    M = torch.linalg.inv(M)
+    N = torch.linalg.inv(N)
+    
+    adps = M.transpose(-1,-2)@adps@M
+    adps = N.transpose(-1,-2)@adps@N
+    
     
     non_H_mask = batch.non_H_mask.numpy()
     indices = torch.arange(len(atoms))[non_H_mask].numpy()
