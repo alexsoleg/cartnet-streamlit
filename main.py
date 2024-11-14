@@ -1,15 +1,11 @@
 import streamlit as st
-import pandas as pd
-import io
 from models.cartnet import CartNet
-import requests
 import os
 from ase.io import read, write
 from ase import Atoms
 from CifFile import ReadCif
 from torch_geometric.data import Data, Batch
 import torch
-import numpy as np
 from utils import radius_graph_pbc
 from ase import Atoms
 from ase.io import write
