@@ -112,12 +112,16 @@ def main():
         st.info("Uploaded file: " + uploaded_file.name)
         st.info(uploaded_file)
         try:
+            bytes_data = uploaded_file.read()
+            st.info(bytes_data)
+            with open(uploaded_file.name, "wb") as f:
+                f.write(bytes_data)
             filename = str(uploaded_file.name)
             # Read the CIF file using ASE
-            atoms = read(uploaded_file, format="cif")
+            atoms = read(filename, format="cif")
             st.info(atoms)
             st.success("CIF file successfully read using ASE.")
-            st.info(uploaded_file.upload_url)
+            st.info(filename.upload_url)
             cif = ReadCif(uploaded_file.upload_url)
             cif_data = cif.first_block()
             if "_diffrn_ambient_temperature" in cif_data.keys():
@@ -163,7 +167,7 @@ def main():
             )
 
             os.remove("output.cif")
-            os.remove(uploaded_file)
+            os.remove(filename)
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
 
