@@ -109,6 +109,8 @@ def main():
     uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"], accept_multiple_files=False)
     # uploaded_file = "ABABEM.cif"
     if uploaded_file is not None:
+        st.info("Uploaded file: " + uploaded_file.name)
+        st.info(uploaded_file)
         try:
             filename = str(uploaded_file.name)
             # Read the CIF file using ASE
