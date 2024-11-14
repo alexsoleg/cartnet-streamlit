@@ -198,7 +198,7 @@ def main():
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
     st.markdown("""
-    ⚠️ **Warning**: This online web application is designed for structures with up to 300 atoms in the unit cell. For larger structures, please use the local implementation of CartNet.
+    ⚠️ **Warning**: This online web application is designed for structures with up to 300 atoms in the unit cell. For larger structures, please use the [local implementation of CartNet](https://github.com/alexsoleg/cartnet-streamlit/).
     """)
 
     st.markdown("""
