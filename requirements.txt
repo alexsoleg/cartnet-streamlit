@@ -1,5 +1,6 @@
-torch==1.13.1+cpu
+torch==1.13.1
 torch_geometric==2.5.2
 torch-scatter==2.1.1
+-f https://data.pyg.org/whl/torch-1.13.1+cpu.html
 streamlit==1.40.1
 ase==3.23.0
