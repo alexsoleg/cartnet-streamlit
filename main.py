@@ -153,6 +153,9 @@ def main():
 
             data.pbc = torch.tensor([True, True, True])
             data.natoms = len(atoms)
+
+            del atoms
+            gc.collect()
             batch = Batch.from_data_list([data])
             
 
@@ -166,7 +169,7 @@ def main():
             delattr(data, "pbc")
             delattr(data, "natoms")
             batch = Batch.from_data_list([data])
-            del data, atoms, edge_index, edge_attr
+            del data, edge_index, edge_attr
             gc.collect()
 
             st.success("Torch graph successfully created.")
