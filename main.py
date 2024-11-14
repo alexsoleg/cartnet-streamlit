@@ -9,6 +9,7 @@ import torch
 from utils import radius_graph_pbc
 from ase import Atoms
 from ase.io import write
+import gc
 
 MEAN_TEMP = torch.tensor(192.1785) #training temp mean
 STD_TEMP = torch.tensor(81.2135) #training temp std
@@ -38,9 +39,11 @@ def process_data(batch, model):
 
     M = torch.linalg.inv(M)
     N = torch.linalg.inv(N)
-    
+
     adps = M.transpose(-1,-2)@adps@M
     adps = N.transpose(-1,-2)@adps@N
+    del M, N
+    gc.collect()
     
     
     non_H_mask = batch.non_H_mask.numpy()
@@ -160,6 +163,8 @@ def main():
             delattr(data, "pbc")
             delattr(data, "natoms")
             batch = Batch.from_data_list([data])
+            del data, atoms
+            gc.collect()
 
             st.success("Torch graph successfully created.")
 
@@ -178,6 +183,7 @@ def main():
 
             os.remove("output.cif")
             os.remove(filename)
+            gc.collect()
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
 
