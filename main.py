@@ -29,6 +29,7 @@ def process_data(batch, model):
     atoms = batch.x.numpy().astype(int)  # Atomic numbers
     positions = batch.pos.numpy()  # Atomic positions
     cell = batch.cell.squeeze(0).numpy()  # Cell parameters
+    temperature = batch.temperature_og.numpy()[0]
 
     with torch.no_grad():
         adps = model(batch)
@@ -60,6 +61,9 @@ def process_data(batch, model):
 
     # Manually append positions and ADPs to the CIF file
     with open('output.cif', 'a') as cif_file:
+
+        # Write temperature
+        cif_file.write(f"\n_diffrn_ambient_temperature    {temperature}\n")
         # Write atomic positions
         cif_file.write("\nloop_\n")
         cif_file.write("_atom_site_label\n")
