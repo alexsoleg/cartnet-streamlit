@@ -135,7 +135,6 @@ def main():
             filename = str(uploaded_file.name)
             # Read the CIF file using ASE
             atoms = read(filename, format="cif")
-            st.success("CIF file successfully read using ASE.")
             cif = ReadCif(filename)
             cif_data = cif.first_block()
             if "_diffrn_ambient_temperature" in cif_data.keys():
