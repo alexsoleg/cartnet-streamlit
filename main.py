@@ -154,8 +154,11 @@ def main():
             data.pbc = torch.tensor([True, True, True])
             data.natoms = len(atoms)
             batch = Batch.from_data_list([data])
+            
 
             edge_index, _, _, edge_attr = radius_graph_pbc(batch, 5.0, 64)
+            del batch
+            gc.collect()
             data.cart_dist = torch.norm(edge_attr, dim=-1)
             data.cart_dir = torch.nn.functional.normalize(edge_attr, dim=-1)
             data.edge_index = edge_index
@@ -163,7 +166,7 @@ def main():
             delattr(data, "pbc")
             delattr(data, "natoms")
             batch = Batch.from_data_list([data])
-            del data, atoms
+            del data, atoms, edge_index, edge_attr
             gc.collect()
 
             st.success("Torch graph successfully created.")
