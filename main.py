@@ -115,6 +115,7 @@ def main():
             filename = str(uploaded_file.name)
             # Read the CIF file using ASE
             atoms = read(uploaded_file, format="cif")
+            st.info(atoms)
             st.success("CIF file successfully read using ASE.")
             cif = ReadCif(uploaded_file)
             cif_data = cif.first_block()
