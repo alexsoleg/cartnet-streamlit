@@ -30,9 +30,9 @@ The script takes two arguments:
 
 Example usage:
 
-'''bash
+```bash
 python predict.py input.cif output.cif
-'''
+```
 
 Or if you prefer, you can use the browser app in your local machine by running:
 
