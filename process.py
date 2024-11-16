@@ -12,6 +12,8 @@ def process_data(batch, model, output_file="output.cif"):
 
 
     adps = model(batch)
+    
+    # Convert Ucart to Ucif
     M = batch.cell.squeeze(0)
     N = torch.diag(torch.linalg.norm(torch.linalg.inv(M.transpose(-1,-2)).squeeze(0), dim=-1))
 
