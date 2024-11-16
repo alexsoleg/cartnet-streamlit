@@ -22,7 +22,7 @@ def main():
     st.markdown("""
                 CartNet is a graph neural network specifically designed for predicting Anisotropic Displacement Parameters (ADPs) in crystal structures. The model has been trained on over 220,000 molecular crystal structures from the Cambridge Structural Database (CSD), making it highly accurate and robust for ADP prediction tasks. CartNet addresses the computational challenges of traditional methods by encoding the full 3D geometry of atomic structures into a Cartesian reference frame, bypassing the need for unit cell encoding. The model incorporates innovative features, including a neighbour equalization technique to enhance interaction detection and a Cholesky-based output layer to ensure valid ADP predictions. Additionally, it introduces a rotational SO(3) data augmentation technique to improve generalization across different crystal structure orientations, making the model highly efficient and accurate in predicting ADPs while significantly reducing computational costs.
     """)
-    
+
     uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"], accept_multiple_files=False)
     # uploaded_file = "ABABEM.cif"
     if uploaded_file is not None:
@@ -45,7 +45,10 @@ def main():
             data.x = torch.tensor(atoms.get_atomic_numbers(), dtype=torch.int32)
 
             if len(atoms.positions) > 300:
-                raise ValueError("This online implementation is not optimized for large systems. For large systems, please use the local version.")
+                st.markdown("""
+                ⚠️ **Warning**: The online app is designed for structures with up to 300 atoms in the unit cell. For larger systems, please use the [local implementation of CartNet Web App](https://github.com/alexsoleg/cartnet-streamlit/).
+                """)
+                raise ValueError("Please provide a structure with less than 300 atoms in the unit cell.")
             
             data.pos = torch.tensor(atoms.positions, dtype=torch.float32)
             data.temperature_og = torch.tensor([temperature], dtype=torch.float32)
