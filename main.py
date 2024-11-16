@@ -46,7 +46,7 @@ def main():
 
             if len(atoms.positions) > 300:
                 st.markdown("""
-                ⚠️ **Warning**: The online app is designed for structures with up to 300 atoms in the unit cell. For larger systems, please use the [local implementation of CartNet Web App](https://github.com/alexsoleg/cartnet-streamlit/).
+                ⚠️ **Warning**: The structure is too large. Please upload a smaller one or use the [local implementation of CartNet Web App](https://github.com/alexsoleg/cartnet-streamlit/).
                 """)
                 raise ValueError("Please provide a structure with less than 300 atoms in the unit cell.")
             
