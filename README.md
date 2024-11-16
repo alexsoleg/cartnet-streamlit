@@ -9,9 +9,7 @@ CartNet is a graph neural network specifically designed for predicting Anisotrop
 
 This repository contains a web application based on the official implementation of CartNet, which can be found at [imatge-upc/CartNet](https://github.com/imatge-upc/CartNet).
 
-> [!NOTE]
->
->For large molecules, the web app is not optimized and may not perform efficiently. It is recommended to use the local application for processing large systems.
+⚠️ **Warning**: The online web application can only process systems wiht less than 300 atoms in the unit cell. For large systems, please use the local application.
 
 ## Local Application
 ### Installation of the local application
