@@ -1,123 +1,16 @@
 import streamlit as st
-from models.cartnet import CartNet
 import os
-from ase.io import read, write
-from ase import Atoms
+from ase.io import read
 from CifFile import ReadCif
 from torch_geometric.data import Data, Batch
 import torch
+from models.master import create_model
+from process import process_data
 from utils import radius_graph_pbc
-from ase import Atoms
-from ase.io import write
 import gc
 
 MEAN_TEMP = torch.tensor(192.1785) #training temp mean
 STD_TEMP = torch.tensor(81.2135) #training temp std
-
-# We cache the loading function to make is very fast on reload.
-@st.cache_resource
-def create_model():
-    model = CartNet(dim_in=256, dim_rbf=64, num_layers=4, radius=5.0, invariant=False, temperature=True, use_envelope=True, cholesky=True)
-    ckpt_path = "cpkt/cartnet_adp.ckpt"
-    load = torch.load(ckpt_path, map_location=torch.device('cpu'))["model_state"]
-    
-    model.load_state_dict(load)
-    model.eval()
-    return model
-
-@torch.no_grad()
-def process_data(batch, model):
-    atoms = batch.x.numpy().astype(int)  # Atomic numbers
-    positions = batch.pos.numpy()  # Atomic positions
-    cell = batch.cell.squeeze(0).numpy()  # Cell parameters
-    temperature = batch.temperature_og.numpy()[0]
-
-
-    adps = model(batch)
-    M = batch.cell.squeeze(0)
-    N = torch.diag(torch.linalg.norm(torch.linalg.inv(M.transpose(-1,-2)).squeeze(0), dim=-1))
-
-    M = torch.linalg.inv(M)
-    N = torch.linalg.inv(N)
-
-    adps = M.transpose(-1,-2)@adps@M
-    adps = N.transpose(-1,-2)@adps@N
-    del M, N
-    gc.collect()
-    
-    
-    non_H_mask = batch.non_H_mask.numpy()
-    indices = torch.arange(len(atoms))[non_H_mask].numpy()
-    indices = {indices[i]: i for i in range(len(indices))}
-    # Create ASE Atoms object
-    ase_atoms = Atoms(numbers=atoms, positions=positions, cell=cell, pbc=True)
-
-    # Convert positions to fractional coordinates
-    fractional_positions = ase_atoms.get_scaled_positions()
-
-    # Write to CIF file
-    write('output.cif', ase_atoms)
-
-    with open('output.cif', 'r') as file:
-        lines = file.readlines()
-
-    # Find the line where "loop_" appears and remove lines from there to the end
-    for i, line in enumerate(lines):
-        if line.strip().startswith('loop_'):
-            lines = lines[:i]
-            break
-
-    # Write the modified lines to a new output file
-    with open('output.cif', 'w') as file:
-        file.writelines(lines)
-
-    # Manually append positions and ADPs to the CIF file
-    with open('output.cif', 'a') as cif_file:
-
-        # Write temperature
-        cif_file.write(f"\n_diffrn_ambient_temperature    {temperature}\n")
-        # Write atomic positions
-        cif_file.write("\nloop_\n")
-        cif_file.write("_atom_site_label\n")
-        cif_file.write("_atom_site_type_symbol\n")
-        cif_file.write("_atom_site_fract_x\n")
-        cif_file.write("_atom_site_fract_y\n")
-        cif_file.write("_atom_site_fract_z\n")
-        cif_file.write("_atom_site_U_iso_or_equiv\n")
-        cif_file.write("_atom_site_thermal_displace_type\n")
-        
-        element_count = {}
-        for i, (atom_number, frac_pos) in enumerate(zip(atoms, fractional_positions)):
-            element = ase_atoms[i].symbol
-            assert atom_number == ase_atoms[i].number
-            if element not in element_count:
-                element_count[element] = 0
-            element_count[element] += 1
-            label = f"{element}{element_count[element]}"
-            u_iso = torch.trace(adps[indices[i]]).mean() if element != 'H' else 0.01
-            type = "Uani" if element != 'H' else "Uiso"
-            cif_file.write(f"{label} {element} {frac_pos[0]} {frac_pos[1]} {frac_pos[2]} {u_iso} {type}\n")
-
-        # Write ADPs
-        cif_file.write("\nloop_\n")
-        cif_file.write("_atom_site_aniso_label\n")
-        cif_file.write("_atom_site_aniso_U_11\n")
-        cif_file.write("_atom_site_aniso_U_22\n")
-        cif_file.write("_atom_site_aniso_U_33\n")
-        cif_file.write("_atom_site_aniso_U_23\n")
-        cif_file.write("_atom_site_aniso_U_13\n")
-        cif_file.write("_atom_site_aniso_U_12\n")
-        
-        element_count = {}
-        for i, atom_number in enumerate(atoms):
-            if atom_number == 1:
-                continue
-            element = ase_atoms[i].symbol
-            if element not in element_count:
-                element_count[element] = 0
-            element_count[element] += 1
-            label = f"{element}{element_count[element]}"
-            cif_file.write(f"{label} {adps[indices[i],0,0]} {adps[indices[i],1,1]} {adps[indices[i],2,2]} {adps[indices[i],1,2]} {adps[indices[i],0,2]} {adps[indices[i],0,1]}\n")
 
 
 @torch.no_grad()
@@ -125,6 +18,10 @@ def main():
     model = create_model()
     st.title("CartNet ADP Prediction")
     st.image('fig/pipeline.png')
+
+    st.markdown("""
+                CartNet is a graph neural network specifically designed for predicting Anisotropic Displacement Parameters (ADPs) in crystal structures. The model has been trained on over 220,000 molecular crystal structures from the Cambridge Structural Database (CSD), making it highly accurate and robust for ADP prediction tasks. CartNet addresses the computational challenges of traditional methods by encoding the full 3D geometry of atomic structures into a Cartesian reference frame, bypassing the need for unit cell encoding. The model incorporates innovative features, including a neighbour equalization technique to enhance interaction detection and a Cholesky-based output layer to ensure valid ADP predictions. Additionally, it introduces a rotational SO(3) data augmentation technique to improve generalization across different crystal structure orientations, making the model highly efficient and accurate in predicting ADPs while significantly reducing computational costs.
+    """)
     
     uploaded_file = st.file_uploader("Upload a CIF file", type=["cif"], accept_multiple_files=False)
     # uploaded_file = "ABABEM.cif"
@@ -198,7 +95,7 @@ def main():
         except Exception as e:
             st.error(f"An error occurred while reading the CIF file: {e}")
     st.markdown("""
-    ⚠️ **Warning**: This online web application is designed for structures with up to 300 atoms in the unit cell. For larger structures, please use the [local implementation of CartNet](https://github.com/alexsoleg/cartnet-streamlit/).
+    ⚠️ **Warning**: This online web application is designed for structures with up to 300 atoms in the unit cell. For larger structures, please use the [local implementation of CartNet Web App](https://github.com/alexsoleg/cartnet-streamlit/).
     """)
     
     st.markdown("""
