@@ -22,11 +22,17 @@ pip install -r requirements.txt
 
 ### Usage
 
-To use the local application, you can run the `predict.py` script.
+You can make predictions directly from Python using the `predict.py` script.
 
 The script takes two arguments:
 1. `input_file`: Path to the input CIF file
 2. `output_file`: Path where you want to save the processed CIF file
+
+Example usage:
+
+'''bash
+python predict.py input.cif output.cif
+'''
 
 Or if you prefer, you can use the browser app in your local machine by running:
 
