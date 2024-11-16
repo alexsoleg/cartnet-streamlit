@@ -5,11 +5,11 @@
 ### CartNet online demo available at: [CartNet Web App](https://cartnet-adp-estimation.streamlit.app)
 
 
-CartNet is a graph neural network specifically designed for predicting Anisotropic Displacement Parameters (ADPs) in crystal structures. The model has been trained on over 220,000 molecular crystal structures from the Cambridge Structural Database (CSD), making it highly accurate and robust for ADP prediction tasks. CartNet addresses the computational challenges of traditional methods by encoding the full 3D geometry of atomic structures into a Cartesian reference frame, bypassing the need for unit cell encoding. The model incorporates innovative features, including a neighbour equalization technique to enhance interaction detection and a Cholesky-based output layer to ensure valid ADP predictions. Additionally, it introduces a rotational SO(3) data augmentation technique to improve generalization across different crystal structure orientations, making the model highly efficient and accurate in predicting ADPs while significantly reducing computational costs.
+CartNet is a graph neural network specifically designed to predict Anisotropic Displacement Parameters (ADPs) in crystal structures. The model has been trained on over 220,000 molecular crystal structures from the Cambridge Structural Database (CSD), making it highly accurate and robust for ADP prediction tasks. CartNet addresses the computational challenges of traditional methods by encoding the full 3D geometry of atomic structures into a Cartesian reference frame, bypassing the need for unit cell encoding. The model incorporates innovative features, including a neighbour equalization technique to enhance interaction detection and a Cholesky-based output layer to ensure valid ADP predictions. Additionally, it introduces a rotational SO(3) data augmentation technique to improve generalization across different crystal structure orientations, making the model highly efficient and accurate in predicting ADPs while significantly reducing computational costs.
 
 This repository contains a web application based on the official implementation of CartNet, which can be found at [imatge-upc/CartNet](https://github.com/imatge-upc/CartNet).
 
-⚠️ **Warning**: The online web application can only process systems wiht less than 300 atoms in the unit cell. For large systems, please use the local application.
+⚠️ **Warning**: The online web application can only process systems with less than 300 atoms in the unit cell. For large systems, please use the local application.
 
 ## Local Application
 ### Installation of the local application
@@ -34,7 +34,7 @@ Example usage:
 python predict.py input.cif output.cif
 ```
 
-Or if you prefer, you can use the browser app in your local machine without the atom number limitation by running:
+Or, if you prefer, you can use the browser app on your local machine without the atom number limitation by running:
 
 ```bash
 streamlit run main_local.py
