@@ -34,7 +34,7 @@ Example usage:
 python predict.py input.cif output.cif
 ```
 
-Or if you prefer, you can use the browser app in your local machine by running:
+Or if you prefer, you can use the browser app in your local machine without the atom number limitation by running:
 
 ```bash
 streamlit run main_local.py
