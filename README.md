@@ -40,11 +40,6 @@ Or, if you prefer, you can use the browser app on your local machine without the
 streamlit run main_local.py
 ```
 
-Example usage:
-
-```bash
-python main_local.py input.cif output.cif
-```
 ## How to cite
 
 If you use CartNet in your research, please cite our paper:
